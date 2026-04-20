@@ -1,7 +1,8 @@
 import express from 'express'
+import cors from 'cors';
 const app = express()
 const port = process.env.PORT || 3000
-
+app.use(cors());
 app.get('/', (req, res) => {
   res.json([{ id: 0, user: 'mister cato' , message: 'glass'},
     { id: 1, user: 'mister dogo' , message: 'dirt'},
