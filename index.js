@@ -2,12 +2,14 @@ import express from 'express'
 import cors from 'cors';
 import session from 'express-session'
 import bcrypt from 'bcrypt'
+import mysql from 'mysql2'
 import 'dotenv/config';
 
 const app = express()
+app.use(express.json()); 
 const port = process.env.PORT || 3000
-const saltRounds = 5;
 app.use(cors());
+app.use(express.urlencoded({ extended: true }));
 app.use(session({
   resave: false, 
   saveUninitialized: false, 
@@ -16,53 +18,31 @@ app.use(session({
     sameSite: 'lax'
   }
 }));
-let tempusers = {
-  admin : {
-    name: 'admin',
-  }
-}
-bcrypt.hash('admin123',saltRounds, function(err,hash){
-  if (err) throw err;
-  tempusers.admin.hash = hash;
+const pool = mysql.createPool({
+  port: parseInt(process.env.DB_PORT),
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 5,
+  queueLimit: 0
 })
-function auth(thename,pass,func){
-  console.log('authenticating %s:%s', thename, pass);
-  if(!tempusers[thename]){return func(null,null)}
+setInterval(() => {
+  pool.query('SELECT 1', (err, results) => {
+    if (err) console.error('Ping failed:', err.message);
+    else console.log('Connection kept alive');
+  });
+}, 15000);
 
-  bcrypt.compare(pass,tempusers[thename].hash,
-    function(err,success){
-      if (err) return func(err)
-      if(success){
-        return func(null,tempusers[thename])
-      }
-      else{
-        return func(null,null)
-      }
-    })
-}
 function restrict(req,res,next){
   if (req.session.user) {
     next();
   } else {
     req.session.error = 'Access denied!';
-    res.redirect('/fuckyou')
+    res.redirect('/404')
   }
 }
-app.get('/login',function(req,res,next){
-  //No form yet so use placeholder
-  auth('admin','admin123',function(err,user){
-    if (err) {return next (err)}
-    if(user){
-      req.session.regenerate(function(){
-          req.session.user = user;
-          res.redirect(req.get('Referrer') || '/');
-      })
-    }
-    else{
-      res.redirect('/perish')
-    }
-  })
-})
 app.get('/', restrict, (req, res) => {
   res.json([{ id: 0, user: 'mister cato' , message: 'glass'},
     { id: 1, user: 'mister dogo' , message: 'dirt'},
@@ -70,7 +50,52 @@ app.get('/', restrict, (req, res) => {
     { id: 3, user: 'mister worm' , message: 'blub blub blub'},
     { id: 4, user: 'mister ant' , message: 'woe unto me!'}]);
 })
+app.post('/login', async (req,res) => {
+  let result = await new Promise((resolve,reject) => {
+    pool.query("SELECT password FROM Users WHERE name = ?",[req.body.name],(err,results) =>{
+      if (err) {
+        console.error("Query Error:", err.message);
+        return;
+      }
+      else{
+        resolve(results)
+      }
+    })
+  });
+  
+  if(result.length == 0){
+    console.log("Wrongusername!");
+    res.json([{message : "NUH UH BIG GUY"}])
+  }
+  else{
+    console.log('authenticating %s:%s', req.body.name, req.body.password);
+      if(await checkPw(req.body.password,result[0].password)){
+        req.session.regenerate(()=>{})
+        req.session.user = req.body.name;
+        res.redirect(req.get('Referrer') || '/');
+      }
+      else{
+        console.log("WrongPassword!");
+        res.json([{message : "NUH UH BIG GUY"}])
+      }
+  }
+})
 
+async function checkPw(pw, hashed){
+  try{
+    const match = await bcrypt.compare(pw,hashed);
+    if(match){
+      return true
+    }
+    else{
+      return false
+    }
+  }
+  catch(err){
+    console.error("CheckPW Err : " + err)
+    return false
+  }
+}
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
