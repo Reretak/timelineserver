@@ -18,7 +18,11 @@ app.use(session({
     sameSite: 'lax'
   }
 }));
-const db = new Database('database.db'); 
+let dbplace = 'database.db'
+if(process.env.NODE_ENV == 'production'){
+  dbplace = '/app/data/database.db'
+}
+const db = new Database(dbplace); 
 
 db.pragma('foreign_keys = ON');
 
@@ -106,10 +110,11 @@ app.post('/login', async (req,res) => {
         return res.json([{ message: "NUH UH BIG GUY" }]); 
       }
       console.log('authenticating %s:%s', req.body.name, req.body.password);
-      const isMatch = await checkPw(req.body.password, pw);
+      const isMatch = await checkPw(req.body.password, pw.password);
       if (isMatch) {
         req.session.regenerate(() => {});
         req.session.user = req.body.name;
+        console.log("NICE!")
         return res.redirect(req.get('Referrer') || '/');
       } else {
         console.log("WrongPassword!");
