@@ -28,12 +28,6 @@ const pool = mysql.createPool({
   connectionLimit: 5,
   queueLimit: 0
 })
-setInterval(() => {
-  pool.query('SELECT 1', (err, results) => {
-    if (err) console.error('Ping failed:', err.message);
-    else console.log('Connection kept alive');
-  });
-}, 15000);
 
 function restrict(req,res,next){
   if (req.session.user) {
@@ -43,7 +37,7 @@ function restrict(req,res,next){
     res.redirect('/404')
   }
 }
-app.get('/', restrict, (req, res) => {
+app.get('/testetstes', restrict, (req, res) => {
   res.json([{ id: 0, user: 'mister cato' , message: 'glass'},
     { id: 1, user: 'mister dogo' , message: 'dirt'},
     { id: 2, user: 'mister thrumbo' , message: 'perish'},
@@ -96,6 +90,9 @@ async function checkPw(pw, hashed){
     return false
   }
 }
+app.get("*splat", (req, res) => {
+  res.send("WEE WOO")
+})
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
