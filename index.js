@@ -11,21 +11,7 @@ app.use(express.json());
 const port = process.env.PORT || 3000
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
-app.use(session({
-  store: new Databasesession({
-      client: db, 
-      expired: {
-        clear: true,
-        intervalMs: 900000 //ms = 15min
-      }
-    }),
-  resave: false, 
-  saveUninitialized: false, 
-  secret: process.env.SESSION_SECRET,
-  cookie: {
-    sameSite: 'lax'
-  }
-}));
+
 let dbplace = 'database.db'
 if(process.env.NODE_ENV == 'production'){
   dbplace = '/app/data/database.db'
@@ -70,6 +56,21 @@ const initDb = db.transaction(() => {
 
 initDb();
 
+app.use(session({
+  store: new Databasesession({
+      client: db, 
+      expired: {
+        clear: true,
+        intervalMs: 900000 //ms = 15min
+      }
+    }),
+  resave: false, 
+  saveUninitialized: false, 
+  secret: process.env.SESSION_SECRET,
+  cookie: {
+    sameSite: 'lax'
+  }
+}));
 const adminExists = db.prepare('SELECT name FROM Users WHERE name = ?').get('admin');
 if (!adminExists) {
   const hashedPassword = '$2a$12$er.h5R8Mzu3P841qp3ObmOVlDxZp50EHaDbcLTtUzzeeDbfIGb6zq';
