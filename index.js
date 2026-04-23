@@ -3,6 +3,7 @@ import cors from 'cors';
 import session from 'express-session'
 import bcrypt from 'bcrypt'
 import Database from 'better-sqlite3';
+import Databasesession from 'better-sqlite3-session-store';
 import 'dotenv/config';
 
 const app = express()
@@ -11,6 +12,13 @@ const port = process.env.PORT || 3000
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
+  store: new SqliteStore({
+      client: Databasesession, 
+      expired: {
+        clear: true,
+        intervalMs: 900000 //ms = 15min
+      }
+    }),
   resave: false, 
   saveUninitialized: false, 
   secret: process.env.SESSION_SECRET,
