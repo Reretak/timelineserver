@@ -12,8 +12,8 @@ const port = process.env.PORT || 3000
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
-  store: new SqliteStore({
-      client: Databasesession, 
+  store: new Databasesession({
+      client: db, 
       expired: {
         clear: true,
         intervalMs: 900000 //ms = 15min
