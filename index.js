@@ -2,7 +2,7 @@ import express from 'express'
 import cors from 'cors';
 import session from 'express-session'
 import bcrypt from 'bcrypt'
-import mysql from 'mysql2'
+import Database from 'better-sqlite3';
 import 'dotenv/config';
 
 const app = express()
@@ -18,16 +18,54 @@ app.use(session({
     sameSite: 'lax'
   }
 }));
-const pool = mysql.createPool({
-  port: parseInt(process.env.DB_PORT),
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 5,
-  queueLimit: 0
-})
+const db = new Database('database.db'); 
+
+db.pragma('foreign_keys = ON');
+
+const initDb = db.transaction(() => {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS Users (
+      name TEXT PRIMARY KEY,
+      password TEXT NOT NULL
+    )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS Posts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL
+    )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS Tags (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT UNIQUE
+    )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS PostsTags (
+      post_id INTEGER,
+      tag_id INTEGER,
+      PRIMARY KEY (post_id, tag_id),
+      FOREIGN KEY (post_id) REFERENCES Posts(id) ON DELETE CASCADE,
+      FOREIGN KEY (tag_id) REFERENCES Tags(id) ON DELETE CASCADE
+    )
+  `);
+});
+
+initDb();
+
+const adminExists = db.prepare('SELECT name FROM Users WHERE name = ?').get('admin');
+if (!adminExists) {
+  const hashedPassword = '$2a$12$er.h5R8Mzu3P841qp3ObmOVlDxZp50EHaDbcLTtUzzeeDbfIGb6zq';
+  db.prepare('INSERT INTO Users (name, password) VALUES (?, ?)').run('admin', hashedPassword);
+  console.log('Admin user created.');
+} else {
+  console.log('Admin user already exists.');
+}
 
 function restrict(req,res,next){
   if (req.session.user) {
@@ -44,34 +82,42 @@ app.get('/testetstes', restrict, (req, res) => {
     { id: 3, user: 'mister worm' , message: 'blub blub blub'},
     { id: 4, user: 'mister ant' , message: 'woe unto me!'}]);
 })
-app.post('/login', async (req,res) => {
-  let result = await new Promise((resolve,reject) => {
-    pool.query("SELECT password FROM Users WHERE name = ?",[req.body.name],(err,results) =>{
-      if (err) {
-        console.error("Query Error:", err.message);
-        return;
-      }
-      else{
-        resolve(results)
-      }
-    })
-  });
-  
-  if(result.length == 0){
-    console.log("Wrongusername!");
-    res.json([{message : "NUH UH BIG GUY"}])
+app.post('/post', (req,res)=>{
+  try {
+        const query = db.prepare("INSERT INTO Posts (title,content) VALUES (@title, @content)")
+        const querymany = db.transaction((data) => {
+          for(const obj of req.body.content){
+            query.run(obj);
+          }
+        })
+        querymany(req.body.content);
+        return res.json("SUKSES")
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json([{ message: "Server error" }]);
   }
-  else{
-    console.log('authenticating %s:%s', req.body.name, req.body.password);
-      if(await checkPw(req.body.password,result[0].password)){
-        req.session.regenerate(()=>{})
+})
+
+app.post('/login', async (req,res) => {
+  try {
+      const pw = db.prepare("SELECT password FROM Users WHERE name = ?").get(req.body.name);
+      if (!pw) {
+        console.log("Wrongusername!");
+        return res.json([{ message: "NUH UH BIG GUY" }]); 
+      }
+      console.log('authenticating %s:%s', req.body.name, req.body.password);
+      const isMatch = await checkPw(req.body.password, pw);
+      if (isMatch) {
+        req.session.regenerate(() => {});
         req.session.user = req.body.name;
-        res.redirect(req.get('Referrer') || '/');
-      }
-      else{
+        return res.redirect(req.get('Referrer') || '/');
+      } else {
         console.log("WrongPassword!");
-        res.json([{message : "NUH UH BIG GUY"}])
+        return res.json([{ message: "NUH UH BIG GUY" }]);
       }
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json([{ message: "Server error" }]);
   }
 })
 
