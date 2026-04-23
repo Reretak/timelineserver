@@ -3,7 +3,8 @@ import cors from 'cors';
 import session from 'express-session'
 import bcrypt from 'bcrypt'
 import Database from 'better-sqlite3';
-import Databasesession from 'better-sqlite3-session-store';
+import DatabasesessionFactory from 'better-sqlite3-session-store';
+const  Databasesession = DatabasesessionFactory(session);
 import 'dotenv/config';
 
 const app = express()
