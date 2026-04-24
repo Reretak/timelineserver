@@ -89,14 +89,7 @@ function restrict(req,res,next){
     res.redirect('/404')
   }
 }
-app.get('/testetstes', restrict, (req, res) => {
-  res.json([{ id: 0, user: 'mister cato' , message: 'glass'},
-    { id: 1, user: 'mister dogo' , message: 'dirt'},
-    { id: 2, user: 'mister thrumbo' , message: 'perish'},
-    { id: 3, user: 'mister worm' , message: 'blub blub blub'},
-    { id: 4, user: 'mister ant' , message: 'woe unto me!'}]);
-})
-app.post('/post', (req,res)=>{
+app.post('/post', restrict, (req,res)=>{
   try {
         const query = db.prepare("INSERT INTO Posts (title,content) VALUES (@title, @content)")
         const querymany = db.transaction((data) => {
@@ -107,6 +100,63 @@ app.post('/post', (req,res)=>{
         querymany(req.body.content);
         return res.json("SUKSES")
   } catch (error) {
+    console.log(error)
+    return res.status(500).json([{ message: "Server error" }]);
+  }
+})
+app.get('/post', (req,res)=>{
+   try {
+      const posts = db.prepare("SELECT title FROM Posts LIMIT 10").all()
+      return res.json(posts);
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json([{ message: "Server error" }]);
+  }
+})
+app.get('/post/:id', (req,res)=>{
+   try {
+      const post = db.prepare("SELECT title FROM Posts WHERE id = ?").get(req.params.id);
+      return res.json(post);
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json([{ message: "Server error" }]);
+  }
+})
+app.post('/postdelete',restrict,(req,res)=>{
+    try {
+      const post = db.prepare("SELECT id FROM Posts WHERE id = ?").get(req.body.id);
+      if (!post) {
+        console.log("No Post with that ID!!");
+        return res.json([{ message: "No Post with that ID!!" }]); 
+      }
+      const isDeletus = db.prepare("DELETE FROM Posts WHERE id = ?").run(req.body.id);
+      if (isDeletus.changes > 0) {
+        return res.json([{message : "Post deleted!"}])
+      } else {
+        return res.json([{ message: "Failed!" }]);
+      }
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json([{ message: "Server error" }]);
+  }
+})
+app.post('/postupdate',restrict,(req,res)=>{
+  try{
+    const post = db.prepare("SELECT id FROM Posts WHERE id = ?").get(req.body.id);
+    if (!post) {
+      console.log("No Post with that ID!!");
+      return res.json([{ message: "No Post with that ID!!" }]); 
+    }
+    else{
+      const isUpdate = db.prepare("UPDATE Posts SET title = ?, content = ? WHERE id = ?").run(req.body.id, req.body.title, req.body.content);
+      if (isUpdate.changes > 0) {
+        return res.json([{message : "Post Updated!"}])
+      } else {
+        return res.json([{ message: "Failed!" }]);
+      }
+    }
+
+  } catch(error){
     console.log(error)
     return res.status(500).json([{ message: "Server error" }]);
   }
