@@ -113,6 +113,9 @@ app.get('/post', (req,res)=>{
           }
         }
         if(current.tagId){
+          if(!before[current.id].tags[current.tagId]){
+            before[current.id].tags[current.tagId] = {}
+          }
           before[current.id].tags[current.tagId].push({
             tag_id : current.tagId,
             tag_name : current.tagName
