@@ -86,17 +86,17 @@ function restrict(req,res,next){
     next();
   } else {
     req.session.error = 'Access denied!';
-    res.redirect('/404')
+    return res.json({ success: true, message: "ACCESS DENIEDDD!!!!" });
   }
 }
 app.post('/post', restrict, (req,res)=>{
   try {
         const query = db.prepare("INSERT INTO Posts (title,content) VALUES (@title, @content)")
         query.run(req.body);
-        return res.json("SUKSES")
+        return res.json({ success: true, message: "SUKSES!!!! POST!!" });
   } catch (error) {
     console.log(error)
-    return res.status(500).json([{ message: "Server error" }]);
+    return res.status(500).json({success: false, message: "BEEP BOOP ERROR!!" });
   }
 })
 app.get('/post', (req,res)=>{
@@ -126,7 +126,7 @@ app.get('/post', (req,res)=>{
       return res.json(Object.values(grouped));
   } catch (error) {
     console.log(error)
-    return res.status(500).json([{ message: "Server error" }]);
+    return res.status(500).json({success: false, message: "BEEP BOOP ERROR!!" });
   }
 })
 app.get('/post/:id', (req,res)=>{
@@ -156,46 +156,46 @@ app.get('/post/:id', (req,res)=>{
       return res.json(Object.values(grouped));
   } catch (error) {
     console.log(error)
-    return res.status(500).json([{ message: "Server error" }]);
+    return res.status(500).json({success: false, message: "BEEP BOOP ERROR!!" });
   }
 })
-app.post('/postdelete',restrict,(req,res)=>{
+app.delete('/post/:id',restrict,(req,res)=>{
     try {
-      const post = db.prepare("SELECT id FROM Posts WHERE id = ?").get(req.body.id);
+      const post = db.prepare("SELECT id FROM Posts WHERE id = ?").get(req.params.id);
       if (!post) {
         console.log("No Post with that ID!!");
-        return res.json([{ message: "No Post with that ID!!" }]); 
+        return res.json({ success: false, message: "CANT FIND POST WITH THAT IDDDD!!!!" });
       }
-      const isDeletus = db.prepare("DELETE FROM Posts WHERE id = ?").run(req.body.id);
+      const isDeletus = db.prepare("DELETE FROM Posts WHERE id = ?").run(req.params.id);
       if (isDeletus.changes > 0) {
-        return res.json([{message : "Post deleted!"}])
+        return res.json({ success: true, message: "SUKSES!!!! POST DELETEEE" });
       } else {
-        return res.json([{ message: "Failed!" }]);
+        return res.json({ success: false, message: "FAILLLL!!!!" });
       }
   } catch (error) {
     console.log(error)
-    return res.status(500).json([{ message: "Server error" }]);
+    return res.status(500).json({success: false, message: "BEEP BOOP ERROR!!" });
   }
 })
-app.post('/postupdate',restrict,(req,res)=>{
+app.put('/post/:id',restrict,(req,res)=>{
   try{
-    const post = db.prepare("SELECT id FROM Posts WHERE id = ?").get(req.body.id);
+    const post = db.prepare("SELECT id FROM Posts WHERE id = ?").get(req.params.id);
     if (!post) {
       console.log("No Post with that ID!!");
-      return res.json([{ message: "No Post with that ID!!" }]); 
+      return res.json({ success: false, message: "NO POST WITHTAHT ID!!!!!!!" });
     }
     else{
-      const isUpdate = db.prepare("UPDATE Posts SET title = ?, content = ? WHERE id = ?").run(req.body.title, req.body.content,req.body.id);
+      const isUpdate = db.prepare("UPDATE Posts SET title = ?, content = ? WHERE id = ?").run(req.body.title, req.body.content,req.params.id);
       if (isUpdate.changes > 0) {
-        return res.json([{message : "Post Updated!"}])
+        return res.json({ success: true, message: "SUKSES!!!! POST UPDATE!" });
       } else {
-        return res.json([{ message: "Failed!" }]);
+        return res.json({ success: false, message: "FAILLL!!!!" });
       }
     }
 
   } catch(error){
     console.log(error)
-    return res.status(500).json([{ message: "Server error" }]);
+    return res.status(500).json({success: false, message: "BEEP BOOP ERROR!!" });
   }
 })
 
@@ -203,10 +203,10 @@ app.post('/tag', restrict, (req,res)=>{
   try {
         const query = db.prepare("INSERT INTO Tags (name) VALUES (@name)")
         query.run(req.body);
-        return res.json("SUKSES")
+        return res.json({ success: true, message: "SUKSES!!!!" });
   } catch (error) {
     console.log(error)
-    return res.status(500).json([{ message: "Server error" }]);
+    return res.status(500).json({success: false, message: "BEEP BOOP ERROR!!" });
   }
 })
 app.get('/tag', (req,res)=>{
@@ -215,7 +215,7 @@ app.get('/tag', (req,res)=>{
       return res.json(tags);
   } catch (error) {
     console.log(error)
-    return res.status(500).json([{ message: "Server error" }]);
+    return res.status(500).json({success: false, message: "BEEP BOOP ERROR!!" });
   }
 })
 app.get('/tag/:id', (req,res)=>{
@@ -224,46 +224,46 @@ app.get('/tag/:id', (req,res)=>{
       return res.json(tag);
   } catch (error) {
     console.log(error)
-    return res.status(500).json([{ message: "Server error" }]);
+    return res.status(500).json({success: false, message: "BEEP BOOP ERROR!!" });
   }
 })
-app.post('/tagdelete',restrict,(req,res)=>{
+app.delete('/tag/:id',restrict,(req,res)=>{
     try {
-      const tag = db.prepare("SELECT id FROM Tags WHERE id = ?").get(req.body.id);
+      const tag = db.prepare("SELECT id FROM Tags WHERE id = ?").get(req.params.id);
       if (!tag) {
         console.log("No Tag with that ID!!");
-        return res.json([{ message: "No Tag with that ID!!" }]); 
+        return res.json({ success: false, message: "CANT FIND THE TAG WITH THAT IDD!!!" });
       }
-      const isDeletus = db.prepare("DELETE FROM Tags WHERE id = ?").run(req.body.id);
+      const isDeletus = db.prepare("DELETE FROM Tags WHERE id = ?").run(req.params.id);
       if (isDeletus.changes > 0) {
-        return res.json([{message : "Tag deleted!"}])
+        return res.json({ success: true, message: "SUKSES!!!! TAG DELETED" });
       } else {
-        return res.json([{ message: "Failed!" }]);
+        return res.json({ success: false, message: "FAILLLL!!!!" });
       }
   } catch (error) {
     console.log(error)
-    return res.status(500).json([{ message: "Server error" }]);
+    return res.status(500).json({success: false, message: "BEEP BOOP ERROR!!" });
   }
 })
-app.post('/tagupdate',restrict,(req,res)=>{
+app.put('/tag/:id',restrict,(req,res)=>{
   try{
-    const tag = db.prepare("SELECT id FROM Tags WHERE id = ?").get(req.body.id);
+    const tag = db.prepare("SELECT id FROM Tags WHERE id = ?").get(req.params.id);
     if (!tag) {
       console.log("No Tag with that ID!!");
-      return res.json([{ message: "No Tag with that ID!!" }]); 
+      return res.json({ success: false, message: "CANT FIND THAT TAG WITH THAT ID WITH THAT IUCHDSUYC GISDUYIED" });
     }
     else{
-      const isUpdate = db.prepare("UPDATE Tags SET name = ? WHERE id = ?").run(req.body.name, req.body.id);
+      const isUpdate = db.prepare("UPDATE Tags SET name = ? WHERE id = ?").run(req.body.name, req.params.id);
       if (isUpdate.changes > 0) {
-        return res.json([{message : "Tag Updated!"}])
+        return res.json({ success: true, message: "SUKSES!!!!" });
       } else {
-        return res.json([{ message: "Failed!" }]);
+        return res.json({ success: false, message: "FAILLL!!!!" });
       }
     }
 
   } catch(error){
     console.log(error)
-    return res.status(500).json([{ message: "Server error" }]);
+    return res.status(500).json({success: false, message: "BEEP BOOP ERROR!!" });
   }
 })
 
@@ -276,13 +276,13 @@ app.post('/post/:id/tag', restrict, (req,res)=>{
         }
       })
       multiquery(req.body.tag_id);
-      return res.json("SUKSES")
+      return res.json({ success: true, message: "SUKSES!!!!" });
   } catch (error) {
     console.log(error)
-    return res.status(500).json([{ message: "Server error" }]);
+    return res.status(500).json({success: false, message: "BEEP BOOP ERROR!!" });
   }
 })
-app.post('/post/:id/deletetag/', restrict, (req,res)=>{
+app.delete('/post/:id/tag/', restrict, (req,res)=>{
   try {
       const query = db.prepare("DELETE FROM PostsTags WHERE post_id = ? AND tag_id = ?")
       const multiquery = db.transaction((tags) => {
@@ -291,10 +291,10 @@ app.post('/post/:id/deletetag/', restrict, (req,res)=>{
         }
       })
       multiquery(req.body.tag_id);
-      return res.json("SUKSES")
+      return res.json({ success: true, message: "SUKSES!!!!" });
   } catch (error) {
     console.log(error)
-    return res.status(500).json([{ message: "Server error" }]);
+    return res.status(500).json({success: false, message: "BEEP BOOP ERROR!!" });
   }
 })
 app.post('/login', async (req,res) => {
@@ -302,7 +302,7 @@ app.post('/login', async (req,res) => {
       const pw = db.prepare("SELECT password FROM Users WHERE name = ?").get(req.body.name);
       if (!pw) {
         console.log("Wrongusername!");
-        return res.json([{ message: "NUH UH BIG GUY" }]); 
+        return res.json({ success: false, message: "SHOO SHOO!" });
       }
       console.log('authenticating %s:%s', req.body.name, req.body.password);
       const isMatch = await checkPw(req.body.password, pw.password);
@@ -310,14 +310,14 @@ app.post('/login', async (req,res) => {
         req.session.regenerate(() => {});
         req.session.user = req.body.name;
         console.log("NICE!")
-        return res.redirect(req.get('Referrer') || '/');
+        return res.json({ success: true, message: "Logged in" });
       } else {
         console.log("WrongPassword!");
-        return res.json([{ message: "NUH UH BIG GUY" }]);
+        return res.json({ success: false, message: "SHOO SHOO!" });
       }
   } catch (error) {
     console.log(error)
-    return res.status(500).json([{ message: "Server error" }]);
+    return res.status(500).json({success: false, message: "BEEP BOOP ERROR!!" });
   }
 })
 
@@ -337,7 +337,7 @@ async function checkPw(pw, hashed){
   }
 }
 app.get("*splat", (req, res) => {
-  res.send("WEE WOO")
+  return res.json({ success: false, message: "How the hell did you get here?" });
 })
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
