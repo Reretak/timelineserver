@@ -101,7 +101,7 @@ app.post('/post', restrict, (req,res)=>{
 })
 app.get('/post', (req,res)=>{
    try {
-      const posts = db.prepare("SELECT Posts.*, Tags.id as tagId, Tags.name as tagName FROM Posts LEFT JOIN PostTags ON Posts.id = PostTags.post_id LEFT JOIN Tags ON PostTags.tag_id = Tags.id LIMIT 10").all()
+      const posts = db.prepare("SELECT Posts.*, Tags.id as tagId, Tags.name as tagName FROM Posts LEFT JOIN PostsTags ON Posts.id = PostsTags.post_id LEFT JOIN Tags ON PostsTags.tag_id = Tags.id LIMIT 10").all()
       return res.json(posts);
   } catch (error) {
     console.log(error)
@@ -110,7 +110,7 @@ app.get('/post', (req,res)=>{
 })
 app.get('/post/:id', (req,res)=>{
    try {
-      const post = db.prepare("SELECT Posts.*, Tags.id as tagId, Tags.name as tagName FROM Posts LEFT JOIN PostTags ON Posts.id = PostTags.post_id LEFT JOIN Tags ON PostTags.tag_id = Tags.id WHERE id = ?").get(req.params.id);
+      const post = db.prepare("SELECT Posts.*, Tags.id as tagId, Tags.name as tagName FROM Posts LEFT JOIN PostsTags ON Posts.id = PostsTags.post_id LEFT JOIN Tags ON PostsTags.tag_id = Tags.id WHERE id = ?").get(req.params.id);
       return res.json(post);
   } catch (error) {
     console.log(error)
