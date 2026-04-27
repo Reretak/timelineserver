@@ -101,7 +101,7 @@ app.post('/post', restrict, (req,res)=>{
 })
 app.get('/post', (req,res)=>{
    try {
-      const posts = db.prepare("SELECT title FROM Posts LIMIT 10").all()
+      const posts = db.prepare("SELECT * FROM Posts LIMIT 10").all()
       return res.json(posts);
   } catch (error) {
     console.log(error)
