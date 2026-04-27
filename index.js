@@ -102,7 +102,25 @@ app.post('/post', restrict, (req,res)=>{
 app.get('/post', (req,res)=>{
    try {
       const posts = db.prepare("SELECT Posts.*, Tags.id as tagId, Tags.name as tagName FROM Posts LEFT JOIN PostsTags ON Posts.id = PostsTags.post_id LEFT JOIN Tags ON PostsTags.tag_id = Tags.id LIMIT 10").all()
-      return res.json(posts);
+      const grouped = posts.reduce((before,current)=>{
+        if(!before[current.id])
+        {
+          before[current.id] = {
+            id : current.id,
+            title : current.title,
+            content : current.content,
+            tags : []
+          }
+        }
+        if(current.tagId){
+          before[current.id].tags[current.tagId].push({
+            tag_id : current.tagId,
+            tag_name : current.tagName
+          })
+        }
+        return before
+      },{})
+      return res.json(Object.values(grouped));
   } catch (error) {
     console.log(error)
     return res.status(500).json([{ message: "Server error" }]);
