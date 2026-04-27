@@ -101,7 +101,7 @@ app.post('/post', restrict, (req,res)=>{
 })
 app.get('/post', (req,res)=>{
    try {
-      const posts = db.prepare("SELECT * FROM Posts LIMIT 10").all()
+      const posts = db.prepare("SELECT Posts.*, Tags.id as tagId, Tags.name as tagName FROM Posts LEFT JOIN PostTags ON Posts.id = PostTags.post_id LEFT JOIN Tags ON PostTags.tag_id = Tags.id LIMIT 10").all()
       return res.json(posts);
   } catch (error) {
     console.log(error)
@@ -110,7 +110,7 @@ app.get('/post', (req,res)=>{
 })
 app.get('/post/:id', (req,res)=>{
    try {
-      const post = db.prepare("SELECT * FROM Posts WHERE id = ?").get(req.params.id);
+      const post = db.prepare("SELECT Posts.*, Tags.id as tagId, Tags.name as tagName FROM Posts LEFT JOIN PostTags ON Posts.id = PostTags.post_id LEFT JOIN Tags ON PostTags.tag_id = Tags.id WHERE id = ?").get(req.params.id);
       return res.json(post);
   } catch (error) {
     console.log(error)
@@ -157,6 +157,104 @@ app.post('/postupdate',restrict,(req,res)=>{
   }
 })
 
+app.post('/tag', restrict, (req,res)=>{
+  try {
+        const query = db.prepare("INSERT INTO Tags (name) VALUES (@name)")
+        query.run(req.body);
+        return res.json("SUKSES")
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json([{ message: "Server error" }]);
+  }
+})
+app.get('/tag', (req,res)=>{
+   try {
+      const tags = db.prepare("SELECT * FROM Tags LIMIT 10").all()
+      return res.json(tags);
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json([{ message: "Server error" }]);
+  }
+})
+app.get('/tag/:id', (req,res)=>{
+   try {
+      const tag = db.prepare("SELECT * FROM Tags WHERE id = ?").get(req.params.id);
+      return res.json(tag);
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json([{ message: "Server error" }]);
+  }
+})
+app.post('/tagdelete',restrict,(req,res)=>{
+    try {
+      const tag = db.prepare("SELECT id FROM Tags WHERE id = ?").get(req.body.id);
+      if (!tag) {
+        console.log("No Tag with that ID!!");
+        return res.json([{ message: "No Tag with that ID!!" }]); 
+      }
+      const isDeletus = db.prepare("DELETE FROM Tags WHERE id = ?").run(req.body.id);
+      if (isDeletus.changes > 0) {
+        return res.json([{message : "Tag deleted!"}])
+      } else {
+        return res.json([{ message: "Failed!" }]);
+      }
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json([{ message: "Server error" }]);
+  }
+})
+app.post('/tagupdate',restrict,(req,res)=>{
+  try{
+    const tag = db.prepare("SELECT id FROM Tags WHERE id = ?").get(req.body.id);
+    if (!tag) {
+      console.log("No Tag with that ID!!");
+      return res.json([{ message: "No Tag with that ID!!" }]); 
+    }
+    else{
+      const isUpdate = db.prepare("UPDATE Tags SET name = ? WHERE id = ?").run(req.body.name, req.body.id);
+      if (isUpdate.changes > 0) {
+        return res.json([{message : "Tag Updated!"}])
+      } else {
+        return res.json([{ message: "Failed!" }]);
+      }
+    }
+
+  } catch(error){
+    console.log(error)
+    return res.status(500).json([{ message: "Server error" }]);
+  }
+})
+
+app.post('/post/:id/tag', restrict, (req,res)=>{
+  try {
+      const query = db.prepare("INSERT INTO PostsTags (post_id, tag_id) VALUES (?,?)")
+      const multiquery = db.transaction((tags) => {
+        for (const t of tags){
+          query.run(req.params.id,t)
+        }
+      })
+      multiquery.run(req.body.tag_id);
+      return res.json("SUKSES")
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json([{ message: "Server error" }]);
+  }
+})
+app.post('/post/:id/deletetag/', restrict, (req,res)=>{
+  try {
+      const query = db.prepare("DELETE FROM PostsTags (post_id, tag_id) WHERE (?,?)")
+      const multiquery = db.transaction((tags) => {
+        for (const t of tags){
+          query.run(req.params.id,t)
+        }
+      })
+      multiquery.run(req.body.tags);
+      return res.json("SUKSES")
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json([{ message: "Server error" }]);
+  }
+})
 app.post('/login', async (req,res) => {
   try {
       const pw = db.prepare("SELECT password FROM Users WHERE name = ?").get(req.body.name);
