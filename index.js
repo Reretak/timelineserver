@@ -233,7 +233,7 @@ app.post('/post/:id/tag', restrict, (req,res)=>{
           query.run(req.params.id,t)
         }
       })
-      multiquery.run(req.body.tag_id);
+      multiquery(req.body.tag_id);
       return res.json("SUKSES")
   } catch (error) {
     console.log(error)
