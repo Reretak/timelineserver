@@ -92,7 +92,7 @@ function restrict(req,res,next){
 app.post('/post', restrict, (req,res)=>{
   try {
         const query = db.prepare("INSERT INTO Posts (title,content) VALUES (@title, @content)")
-        query.run(req.body.title,req.body.content);
+        query.run(req.body);
         return res.json("SUKSES")
   } catch (error) {
     console.log(error)
