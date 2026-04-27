@@ -131,8 +131,29 @@ app.get('/post', (req,res)=>{
 })
 app.get('/post/:id', (req,res)=>{
    try {
-      const post = db.prepare("SELECT Posts.*, Tags.id as tagId, Tags.name as tagName FROM Posts LEFT JOIN PostsTags ON Posts.id = PostsTags.post_id LEFT JOIN Tags ON PostsTags.tag_id = Tags.id WHERE id = ?").get(req.params.id);
-      return res.json(post);
+      const post = db.prepare("SELECT Posts.*, Tags.id as tagId, Tags.name as tagName FROM Posts LEFT JOIN PostsTags ON Posts.id = PostsTags.post_id LEFT JOIN Tags ON PostsTags.tag_id = Tags.id WHERE id = ?").get(req.params.id);      
+      const grouped = post.reduce((before,current)=>{
+        if(!before[current.id])
+        {
+          before[current.id] = {
+            id : current.id,
+            title : current.title,
+            content : current.content,
+            tags : []
+          }
+        }
+        if(current.tagId){
+          before[current.id].tags.push(
+            {
+              tag_id : current.tagId,
+              tag_name : current.tagName
+            }
+          )
+        }
+        
+        return before
+      },{})
+      return res.json(Object.values(grouped));
   } catch (error) {
     console.log(error)
     return res.status(500).json([{ message: "Server error" }]);
