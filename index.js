@@ -131,7 +131,7 @@ app.get('/post', (req,res)=>{
 })
 app.get('/post/:id', (req,res)=>{
    try {
-      const post = db.prepare("SELECT Posts.*, Tags.id as tagId, Tags.name as tagName FROM Posts LEFT JOIN PostsTags ON Posts.id = PostsTags.post_id LEFT JOIN Tags ON PostsTags.tag_id = Tags.id WHERE id = ?").get(req.params.id);      
+      const post = db.prepare("SELECT Posts.*, Tags.id as tagId, Tags.name as tagName FROM Posts LEFT JOIN PostsTags ON Posts.id = PostsTags.post_id LEFT JOIN Tags ON PostsTags.tag_id = Tags.id WHERE id = ?").all(req.params.id);      
       const grouped = post.reduce((before,current)=>{
         if(!before[current.id])
         {
