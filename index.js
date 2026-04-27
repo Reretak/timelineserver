@@ -110,7 +110,7 @@ app.get('/post', (req,res)=>{
 })
 app.get('/post/:id', (req,res)=>{
    try {
-      const post = db.prepare("SELECT title FROM Posts WHERE id = ?").get(req.params.id);
+      const post = db.prepare("SELECT * FROM Posts WHERE id = ?").get(req.params.id);
       return res.json(post);
   } catch (error) {
     console.log(error)
