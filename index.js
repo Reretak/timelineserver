@@ -269,7 +269,7 @@ app.post('/post/:id/deletetag/', restrict, (req,res)=>{
           query.run(req.params.id,t)
         }
       })
-      multiquery.run(req.body.tags);
+      multiquery(req.body.tags);
       return res.json("SUKSES")
   } catch (error) {
     console.log(error)
