@@ -143,7 +143,7 @@ app.post('/postupdate',restrict,(req,res)=>{
       return res.json([{ message: "No Post with that ID!!" }]); 
     }
     else{
-      const isUpdate = db.prepare("UPDATE Posts SET title = ?, content = ? WHERE id = ?").run(req.body.id, req.body.title, req.body.content);
+      const isUpdate = db.prepare("UPDATE Posts SET title = ?, content = ? WHERE id = ?").run(req.body.title, req.body.content,req.body.id);
       if (isUpdate.changes > 0) {
         return res.json([{message : "Post Updated!"}])
       } else {
