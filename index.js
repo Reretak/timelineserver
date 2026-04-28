@@ -90,7 +90,7 @@ function restrict(req,res,next){
     next();
   } else {
     req.session.error = 'Access denied!';
-    return res.json({ success: true, message: "ACCESS DENIEDDD!!!!" });
+    return res.json({ success: false, message: "ACCESS DENIEDDD!!!!" });
   }
 }
 app.post('/post', restrict, (req,res)=>{
