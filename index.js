@@ -10,7 +10,11 @@ import 'dotenv/config';
 const app = express()
 app.use(express.json()); 
 const port = process.env.PORT || 3000
-app.use(cors());
+const corsOptions = {
+  origin: 'https://reretak.github.io/timeline/login', 
+  credentials: true, 
+};
+app.use(cors(corsOptions));
 app.use(express.urlencoded({ extended: true }));
 
 let dbplace = 'database.db'
