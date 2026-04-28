@@ -11,7 +11,7 @@ const app = express()
 app.use(express.json()); 
 const port = process.env.PORT || 3000
 const corsOptions = {
-  origin: 'https://reretak.github.io', 
+  origin: ['https://reretak.github.io', 'http://localhost:5173'],
   credentials: true, 
 };
 app.use(cors(corsOptions));
