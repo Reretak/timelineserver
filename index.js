@@ -11,7 +11,7 @@ const app = express()
 app.use(express.json()); 
 const port = process.env.PORT || 3000
 const corsOptions = {
-  origin: 'https://reretak.github.io/timeline/login', 
+  origin: 'https://reretak.github.io/timeline', 
   credentials: true, 
 };
 app.use(cors(corsOptions));
